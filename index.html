@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Placement Probability Predictor</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+    .spinner {
+        border: 3px solid rgba(255,255,255,0.3);
+        border-radius: 50%;
+        border-top: 3px solid #fff;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .chat-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .chat-scroll::-webkit-scrollbar-thumb {
+        background-color: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    body {
+        background: #050505;
+    }
+
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        background:
+            radial-gradient(circle at 10% 60%, rgba(168,85,247,0.35), transparent 40%),
+            radial-gradient(circle at 90% 60%, rgba(168,85,247,0.35), transparent 40%),
+            radial-gradient(circle at 50% 15%, rgba(147,51,234,0.15), transparent 45%),
+            #050505;
+    }
+    </style>
+</head>
+<body class="bg-black min-h-screen text-white flex items-center justify-center p-6 relative overflow-x-hidden">
+
+    <div class="bg-gray-900/80 backdrop-blur-xl border border-purple-700/30 p-8 rounded-2xl shadow-2xl max-w-2xl w-full">
+        <h2 class="text-4xl font-extrabold text-center mb-2 bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">🎓 Placement Probability Predictor</h2>
+        <p class="text-gray-400 text-center mb-8">Calculate the percentage chance of a student getting placed.</p>
+
+        <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-300 mb-1">Student Name</label>
+            <input type="text" id="student_name" placeholder="Enter name" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+        </div>
+
+        <form id="predictionForm" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1">Age</label>
+                    <input type="number" id="age" value="21" min="15" max="40" required class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1">Gender</label>
+                    <select id="gender" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1">CGPA</label>
+                    <input type="number" id="cgpa" value="8.0" step="any" min="0" max="10" required class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1">Branch</label>
+                    <select id="branch" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Electronics">Electronics</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Civil">Civil</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1">College Tier</label>
+                    <select id="college_tier" class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                        <option value="Tier 1">Tier 1</option>
+                        <option value="Tier 2">Tier 2</option>
+                        <option value="Tier 3">Tier 3</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1">Internships</label>
+                    <input type="number" id="internships" value="1" min="0" required class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1">Projects</label>
+                    <input type="number" id="projects" value="2" min="0" required class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-300 mb-1">Certifications</label>
+                    <input type="number" id="certifications" value="1" min="0" required class="w-full bg-gray-800 text-white border border-gray-700 rounded-lg p-2.5 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div>
+                <div class="flex justify-between text-sm font-semibold text-gray-300 mb-1">
+                    <label>Coding Skill Score</label>
+                    <span id="scoreValue" class="text-purple-400">70/100</span>
+                </div>
+                <input type="range" id="coding_score" min="0" max="100" value="70" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500" oninput="document.getElementById('scoreValue').innerText = this.value + '/100'">
+            </div>
+
+            <button type="submit" id="submitBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 flex justify-center items-center gap-2 cursor-pointer shadow-lg shadow-purple-600/20">
+                <span>Calculate Placement Chance</span>
+                <div id="loader" class="spinner hidden"></div>
+            </button>
+        </form>
+
+        <div id="resultWrapper" class="hidden mt-6 space-y-3">
+            <div id="resultBox" class="p-4 rounded-lg text-center font-bold text-xl bg-purple-950/50 text-purple-300 border border-purple-500/30 shadow-inner"></div>
+            <button onclick="downloadPDFReport()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 text-sm cursor-pointer shadow-md">
+                📥 Download Detailed Placement Report (PDF)
+            </button>
+        </div>
+
+        <div id="atsSection" class="hidden mt-6 bg-gray-900/80 border border-purple-600/40 rounded-xl p-6">
+            <h2 class="text-2xl font-bold text-purple-400 mb-3">📄 ATS Resume Analyzer</h2>
+            <p class="text-gray-400 mb-4">Upload your resume to check ATS compatibility.</p>
+            <input type="file" id="resumeFile" accept=".pdf,.doc,.docx" class="w-full bg-gray-800 border border-purple-600/30 rounded-lg p-3 text-white">
+            <button onclick="analyzeResume()" class="mt-4 w-full bg-purple-600 hover:bg-purple-700 py-3 rounded-lg font-bold shadow-md cursor-pointer transition">Analyze Resume</button>
+
+            <div id="atsResult" class="hidden mt-6">
+                <div class="text-center">
+                    <div class="w-36 h-36 mx-auto rounded-full bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center text-4xl font-bold">
+                        <span id="atsScore">0</span>
+                    </div>
+                    <h3 class="text-xl font-bold mt-4">ATS Score</h3>
+                    <p id="employability" class="text-3xl text-green-400 font-bold mt-2">Employability: 0%</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-5 mt-6">
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="font-bold text-red-400 mb-3">❌ Missing Skills</h3>
+                        <div id="missingSkills" class="text-sm text-gray-300 space-y-1"></div>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <h3 class="font-bold text-green-400 mb-3">💡 Suggestions</h3>
+                        <div id="resumeSuggestions" class="text-sm text-gray-300 space-y-1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hidden">
+        <div id="pdfReportTemplate" class="p-8 max-w-xl bg-white text-gray-800 space-y-6">
+            <div class="border-b-2 border-blue-600 pb-4 text-center">
+                <h1 class="text-2xl font-bold text-gray-900">📊 PLACEMENT EVALUATION REPORT</h1>
+                <p class="text-sm text-gray-500">Generated on: <span id="pdf_date"></span></p>
+            </div>
+            <div>
+                <p class="text-lg"><strong>Student Name:</strong> <span id="pdf_name"></span></p>
+                <p class="text-sm text-gray-600">Branch: <span id="pdf_branch"></span> | Academic Standing: <span id="pdf_cgpa"></span> CGPA</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg text-center border border-blue-200">
+                <p class="text-sm uppercase font-bold tracking-wider text-blue-700">🎯 Estimated Placement Chance</p>
+                <p class="text-4xl font-black text-blue-900 mt-1" id="pdf_chance">0%</p>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                    <h3 class="font-bold text-green-800 mb-2">💪 Strengths</h3>
+                    <div id="pdf_strengths" class="text-xs space-y-1 text-gray-700"></div>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                    <h3 class="font-bold text-red-800 mb-2">⚠️ Areas to Improve</h3>
+                    <div id="pdf_weaknesses" class="text-xs space-y-1 text-gray-700"></div>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 class="font-bold text-gray-800 mb-2">🚀 Tactical Recommendations</h3>
+                <div id="pdf_recommendations" class="text-xs space-y-1 text-gray-700"></div>
+            </div>
+            <div class="p-4 bg-purple-50 rounded-lg border border-purple-200 text-center">
+                <h3 class="font-bold text-purple-800">📋 Overall Assessment</h3>
+                <p class="text-md font-semibold text-purple-950 mt-1" id="pdf_assessment"></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <div id="chatWindow" class="hidden w-[360px] sm:w-[400px] h-[500px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col mb-4 overflow-hidden transition-all duration-300">
+            <div class="bg-gray-800 text-white p-4 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🤖</span>
+                    <div>
+                        <h3 class="font-bold text-sm">Placement AI Advisor</h3>
+                        <p class="text-[11px] text-green-400">Online | Ready to assist</p>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" class="text-gray-400 hover:text-white transition text-lg font-bold px-1 cursor-pointer">✕</button>
+            </div>
+
+            <div id="chatHistory" class="flex-1 p-4 overflow-y-auto space-y-3 chat-scroll bg-gray-50 text-sm">
+                <div class="flex gap-2 items-start">
+                    <div class="bg-gray-300 p-1.5 rounded-full text-xs">🤖</div>
+                    <div class="bg-white border border-gray-200 text-gray-800 p-2.5 rounded-lg rounded-tl-none shadow-sm max-w-[85%]">
+                        Hello! Fill out the placement calculator and hit calculate. I can instantly break down your Strengths, Weaknesses, and create a structured PDF report card summary for you!
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-2 bg-white border-t border-gray-150 flex gap-2 overflow-x-auto text-xs whitespace-nowrap chat-scroll">
+                <button onclick="sendPreSetQuestion('How can I improve my placement?')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-full transition border border-blue-100">📈 How to improve?</button>
+                <button onclick="sendPreSetQuestion('Which skills should I learn?')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-full transition border border-blue-100">💡 Skills to learn?</button>
+                <button onclick="sendPreSetQuestion('Am I interview ready?')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-full transition border border-blue-100">🎯 Interview ready?</button>
+                <button onclick="sendPreSetQuestion('Which certifications should I take?')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-full transition border border-blue-100">📜 Certifications?</button>
+                <button onclick="sendPreSetQuestion('Which career suits me?')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-full transition border border-blue-100">💼 Fitting careers?</button>
+                <button onclick="sendPreSetQuestion('How many projects should I have?')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-full transition border border-blue-100">📁 Projects needed?</button>
+                <button onclick="sendPreSetQuestion('Is my CGPA enough?')" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold px-3 py-1.5 rounded-full transition border border-blue-100">📉 CGPA verification</button>
+            </div>
+
+            <form id="chatForm" class="p-3 bg-white border-t border-gray-200 flex gap-2">
+                <input type="text" id="chatInput" placeholder="Ask a question..." autocomplete="off" class="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none text-black">
+                <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white font-bold px-4 py-1.5 rounded-lg text-sm transition">Send</button>
+            </form>
+        </div>
+
+        <button onclick="toggleChat()" class="text-5xl bg-transparent shadow-none hover:scale-110 transition-all duration-200 relative cursor-pointer">
+           <span id="chatIcon">🤖</span>
+           <span id="chatPing" class="absolute top-1 right-1 h-3 w-3 rounded-full bg-red-500 border-2 border-white"></span>
+        </button>
+    </div>
+
+    <script>
+        const form = document.getElementById('predictionForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loader = document.getElementById('loader');
+        const resultWrapper = document.getElementById('resultWrapper');
+        const resultBox = document.getElementById('resultBox');
+        
+        const chatWindow = document.getElementById('chatWindow');
+        const chatIcon = document.getElementById('chatIcon');
+        const chatPing = document.getElementById('chatPing');
+        const chatHistory = document.getElementById('chatHistory');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+
+        let verifiedLatestChance = "0.0%";
+
+        function toggleChat() {
+            if (chatWindow.classList.contains('hidden')) {
+                chatWindow.classList.remove('hidden');
+                chatIcon.innerText = "👇";
+                chatPing.classList.add('hidden');
+                chatHistory.scrollTop = chatHistory.scrollHeight;
+            } else {
+                chatWindow.classList.add('hidden');
+                chatIcon.innerText = "🤖";
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loader.classList.remove('hidden');
+            submitBtn.disabled = true;
+            resultWrapper.classList.add('hidden');
+
+            const payload = {
+                age: parseInt(document.getElementById('age').value),
+                gender: document.getElementById('gender').value,
+                cgpa: parseFloat(document.getElementById('cgpa').value),
+                branch: document.getElementById('branch').value,
+                college_tier: document.getElementById('college_tier').value,
+                internships_count: parseInt(document.getElementById('internships').value),
+                projects_count: parseInt(document.getElementById('projects').value),
+                certifications_count: parseInt(document.getElementById('certifications').value),
+                coding_skill_score: parseInt(document.getElementById('coding_score').value)
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                   const result = await response.json();
+                   verifiedLatestChance = result.employability + "%";
+                   resultWrapper.classList.remove('hidden');
+                   resultBox.className = "p-4 rounded-lg text-center font-bold text-xl bg-purple-950/50 text-purple-300 border border-purple-500/30 shadow-inner";
+                   resultBox.innerText = `📈 Result: ${result.employability}% Placement Probability`;
+                   document.getElementById("atsSection").classList.remove("hidden");
+                   triggerBotReaction(payload, result.employability); 
+                } else {
+                    throw new Error("Server response not OK");
+                }
+            } catch (error) {
+                resultWrapper.classList.remove('hidden');
+                resultBox.className = "p-4 rounded-lg text-center font-semibold text-sm bg-red-950/50 text-red-400 border border-red-500/30";
+                resultBox.innerText = "❌ Error: Could not reach backend FastAPI app.";
+            } finally {
+                loader.classList.add('hidden');
+                submitBtn.disabled = false;
+            }
+        });
+
+        function appendChatMessage(sender, text) {
+            const isBot = sender === 'bot';
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `flex gap-2 items-start ${!isBot ? 'flex-row-reverse' : ''}`;
+            
+            msgDiv.innerHTML = `
+                <div class="${isBot ? 'bg-gray-300' : 'bg-purple-600 text-white'} p-1.5 rounded-full text-xs flex-shrink-0">
+                    ${isBot ? '🤖' : '👤'}
+                </div>
+                <div class="${isBot ? 'bg-white border border-gray-200 text-gray-800' : 'bg-purple-500 text-white'} p-2.5 rounded-lg shadow-sm max-w-[85%] ${isBot ? 'rounded-tl-none' : 'rounded-tr-none'}">
+                    ${text}
+                </div>
+            `;
+            chatHistory.appendChild(msgDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+
+        function compileInsightData() {
+            const name = document.getElementById("student_name").value || "Student";
+            const cgpaVal = parseFloat(document.getElementById("cgpa").value);
+            const codeVal = parseInt(document.getElementById("coding_score").value);
+            const branchVal = document.getElementById("branch").value;
+            const projectsVal = parseInt(document.getElementById("projects").value);
+            const internVal = parseInt(document.getElementById("internships").value);
+            const certVal = parseInt(document.getElementById("certifications").value);
+            
+            let strengths = [], weaknesses = [], recommendations = [];
+            
+            if(cgpaVal >= 8) strengths.push("• Good Academic Performance"); else weaknesses.push("• CGPA below preferred range");
+            recommendations.push("• Maintain CGPA above 8.0");
+            
+            if(codeVal >= 75) strengths.push("• Strong Coding Skills"); else weaknesses.push("• Coding needs improvement");
+            recommendations.push("• Solve DSA problems daily");
+            
+            if(projectsVal >= 3) strengths.push("• Strong Project Portfolio"); else weaknesses.push("• Build more real-world projects");
+            recommendations.push("• Build at least 3 quality projects");
+            
+            if(internVal >= 1) strengths.push("• Internship Experience"); else weaknesses.push("• No internship experience");
+            recommendations.push("• Apply for internships regularly");
+            
+            if(certVal >= 2) strengths.push("• Good Certification Profile"); else weaknesses.push("• Few certifications");
+            recommendations.push("• Complete AWS, Google Cloud or IBM certifications");
+            
+            recommendations.push("• Improve communication and aptitude skills");
+            recommendations.push("• Keep GitHub, Resume and LinkedIn updated");
+            recommendations.push("• Practice mock technical interviews");
+            
+            let assessment = "Excellent Placement Potential";
+            const chance = parseFloat(verifiedLatestChance);
+            if(chance < 40) assessment = "Critical Portfolio Focus Advised";
+            else if(chance < 75) assessment = "Moderate Placement Potential";
+            
+            return {name, branchVal, cgpaVal, strengths, weaknesses, recommendations, assessment};
+        }
+
+        function triggerBotReaction(data, chance) {
+            const insight = compileInsightData();
+            
+            let chatSummary = `
+                <strong>📋 Placement Summary Card for ${insight.name}</strong><br><br>
+                <strong>🎯 Placement Chance:</strong> ${chance}%<br><br>
+                <strong>💪 Strengths:</strong><br>${insight.strengths.join('<br>') || '• Building initial baselines'}<br><br>
+                <strong>⚠️ Areas to Improve:</strong><br>${insight.weaknesses.join('<br>') || '• No obvious warning indicators'}<br><br>
+                <strong>🚀 Recommendations:</strong><br>${insight.recommendations.join('<br>') || '• Maintain high standards and prep mock technical workflows.'}<br><br>
+                <strong>Overall Assessment:</strong> <span class="text-purple-700 font-bold">${insight.assessment}</span>
+            `;
+
+            setTimeout(() => {
+                appendChatMessage('bot', chatSummary);
+                if (chatWindow.classList.contains('hidden')) {
+                    chatPing.classList.remove('hidden');
+                }
+            }, 600);
+        }
+
+        function downloadPDFReport() {
+            const data = compileInsightData();
+            
+            document.getElementById('pdf_date').innerText = new Date().toLocaleDateString();
+            document.getElementById('pdf_name').innerText = data.name;
+            document.getElementById('pdf_branch').innerText = data.branchVal;
+            document.getElementById('pdf_cgpa').innerText = data.cgpaVal;
+            document.getElementById('pdf_chance').innerText = verifiedLatestChance;
+            
+            document.getElementById('pdf_strengths').innerHTML = data.strengths.join('<br>') || '• Initial profiles compiling';
+            document.getElementById('pdf_weaknesses').innerHTML = data.weaknesses.join('<br>') || '• Solid core filters passed';
+            document.getElementById('pdf_recommendations').innerHTML = data.recommendations.join('<br>') || '• Core standards aligned. Target specialized system designs.';
+            document.getElementById('pdf_assessment').innerText = data.assessment;
+
+            const element = document.getElementById('pdfReportTemplate');
+            const options = {
+                margin: 0.5,
+                filename: `Placement_Report_${data.name}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(element).set(options).save();
+        }
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            appendChatMessage('user', text);
+            chatInput.value = "";
+            processBotResponse(text);
+        });
+
+        function sendPreSetQuestion(text) {
+            appendChatMessage('user', text);
+            processBotResponse(text);
+        }
+
+        function processBotResponse(query) {
+            const lowerQuery = query.toLowerCase();
+            const insight = compileInsightData();
+            const cgpa = insight.cgpaVal;
+            const coding = parseInt(document.getElementById("coding_score").value);
+            const projects = parseInt(document.getElementById("projects").value);
+            const internships = parseInt(document.getElementById("internships").value);
+            const branch = insight.branchVal;
+
+            let reply = "";
+
+            if (lowerQuery.includes("placement chance")) {
+                reply = `🎯 <b>Your Placement Chance</b><br><br><span style="font-size:20px;color:#a855f7;">${verifiedLatestChance}</span><br><br>Keep improving your coding profile and interview skills to increase it further.`;
+            } else if (lowerQuery.includes("improve")) {
+                reply = `🚀 <b>How to Improve Your Placement</b><br><br>${insight.recommendations.join("<br>")}`;
+            } else if (lowerQuery.includes("strength") || lowerQuery.includes("good at")) {
+                reply = "<b>💪 Your Strengths</b><br><br>";
+                if(cgpa>=8) reply+="✅ Good CGPA<br>";
+                if(coding>=75) reply+="✅ Strong Coding Skills<br>";
+                if(projects>=2) reply+="✅ Multiple Projects<br>";
+                if(internships>=1) reply+="✅ Internship Experience<br>";
+                if(reply=="<b>💪 Your Strengths</b><br><br>") reply+="Continue building your profile.";
+            } else if (lowerQuery.includes("weak") || lowerQuery.includes("improve area")) {
+                reply = "<b>⚠ Areas to Improve</b><br><br>";
+                if(cgpa<8) reply+="• Improve your CGPA<br>";
+                if(coding<75) reply+="• Practice Coding & DSA<br>";
+                if(projects<2) reply+="• Build More Projects<br>";
+                if(internships==0) reply+="• Complete an Internship<br>";
+            } else if (lowerQuery.includes("skills") || lowerQuery.includes("learn")) {
+                if (branch === "Computer Science" || branch === "Information Technology") {
+                    reply = `📚 <b>Skills to Learn</b><br><br>✔ DSA<br>✔ Java / Python<br>✔ SQL & Databases<br>✔ Git & GitHub<br>✔ React & Node.js<br>✔ Cloud Basics (AWS)`;
+                } else {
+                    reply = `📚 Learn your core engineering subjects along with Python, SQL, Cloud Computing, and foundational technical skills.`;
+                }
+            } else if (lowerQuery.includes("interview")) {
+                if(cgpa>=8 && coding>=75 && projects>=2) {
+                    reply = `🎤 <b>Interview Readiness</b><br><br>✅ You are interview ready.<br><br>Practice behavioral HR questions, mock interviews, and basic System Design.`;
+                } else {
+                    reply = `🎤 <b>Interview Readiness</b><br><br>⚠ Improve:<br><br>• Core DSA & Coding<br>• Project Details<br>• Technical Communication`;
+                }
+            } else if (lowerQuery.includes("certification")) {
+                reply = `📖 <b>Recommended Certifications</b><br><br>✔ AWS Cloud Practitioner<br>✔ Google Cloud Digital Leader<br>✔ Red Hat Certified System Administrator`;
+            } else if (lowerQuery.includes("career")) {
+                reply = `💼 <b>Career Pathways</b><br><br>✔ Software Engineer<br>✔ Full Stack Developer<br>✔ Data Engineer<br>✔ System Analyst`;
+            } else if (lowerQuery.includes("project")) {
+                reply = `📁 You currently have <b>${projects}</b> project(s).<br><br>Recommended:<br>✔ 3 Quality Projects deployed live with a clean GitHub readme.`;
+            } else if (lowerQuery.includes("cgpa")) {
+                if(cgpa>=8.5) reply = "🎓 Excellent CGPA! You satisfy most company eligibility criteria.";
+                else if(cgpa>=7.5) reply = "👍 Your CGPA is good, but reaching 8+ will clear any strict filtering constraints.";
+                else reply = "📉 Focus on lifting your academic standing up to target at least 7.5 to pass foundational corporate eligibility filters.";
+            } else {
+                reply = "🤖 I'm here to help! Ask me about strengths, weaknesses, interview readiness, skills to learn, or how to improve your probability.";
+            }
+            appendChatMessage('bot', reply);
+        }
+
+        function analyzeResume() {
+            const fileInput = document.getElementById("resumeFile");
+            const atsResult = document.getElementById("atsResult");
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert("Please select a resume file first before running the ATS analysis.");
+                return;
+            }
+
+            const fileName = fileInput.files[0].name;
+            const branchVal = document.getElementById("branch").value;
+            
+            atsResult.classList.remove("hidden");
+            document.getElementById("atsScore").innerText = "⏳";
+            document.getElementById("employability").innerText = "Analyzing metrics...";
+            document.getElementById("missingSkills").innerHTML = "Parsing document content...";
+            document.getElementById("resumeSuggestions").innerHTML = "Evaluating layouts...";
+
+            let skillsList = "";
+            let coreSuggestions = "";
+            let baseScore = 70;
+
+            if (branchVal === "Computer Science" || branchVal === "Information Technology") {
+                skillsList = "• Distributed Systems<br>• Docker / Kubernetes / DevOps<br>• Advanced Data Structures";
+                coreSuggestions = "• Quantify achievements using the X-Y-Z formula (e.g., 'Improved latency by 15%')<br>• Append explicit GitHub or live deployment links.";
+                baseScore += 12;
+            } else if (branchVal === "Electronics") {
+                skillsList = "• Embedded C / RTOS<br>• Verilog / VHDL Coding<br>• MATLAB simulation workflows";
+                coreSuggestions = "• Detail physical laboratory testing architectures.<br>• Outline custom PCB layout designs.";
+                baseScore += 5;
+            } else {
+                skillsList = "• Industry 4.0 IoT Foundations<br>• Applied Project Management Metrics<br>• Advanced Analytical Modeling";
+                coreSuggestions = "• Target automation tooling and workflow integration.<br>• Emphasize cross-functional structural designs.";
+                baseScore -= 2;
+            }
+
+            setTimeout(() => {
+                document.getElementById("atsScore").innerText = baseScore + "%";
+                document.getElementById("employability").innerText = `Employability: ${baseScore}%`;
+                document.getElementById("missingSkills").innerHTML = skillsList;
+                document.getElementById("resumeSuggestions").innerHTML = coreSuggestions;
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
